@@ -1,0 +1,15 @@
+# .NET build output
+bin/
+obj/
+.vs/
+*.user
+
+# Local SQLite database
+src/Warehouse.Api/App_Data/*.db
+src/Warehouse.Api/App_Data/*.db-shm
+src/Warehouse.Api/App_Data/*.db-wal
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

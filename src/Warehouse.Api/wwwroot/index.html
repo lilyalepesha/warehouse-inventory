@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>СкладПро — учёт товара магазина</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+        </div>
+        <div>
+          <div class="brand-name">СкладПро</div>
+          <div class="brand-caption">учёт и аналитика</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>Обзор</span>
+        </button>
+        <button class="nav-item" data-view="stock">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+          <span>Остатки</span>
+        </button>
+        <button class="nav-item" data-view="receipts">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+          <span>Поступления</span>
+        </button>
+        <button class="nav-item" data-view="writeoffs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
+          <span>Списание</span>
+        </button>
+        <button class="nav-item" data-view="reports">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          <span>Отчёты</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-note">
+        <div class="sidebar-note-title">Демо-режим</div>
+        <p>База SQLite заполнена тестовыми партиями, продажами и списаниями.</p>
+      </div>
+      <div class="sidebar-footer">Учебный проект · .NET 9 + EF Core</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">Обзор склада</h1>
+          <p id="pageSubtitle">Ключевые показатели магазина на сегодня</p>
+        </div>
+        <div class="topbar-right">
+          <div class="today" id="todayLabel"></div>
+          <div class="avatar">ИП</div>
+        </div>
+      </header>
+
+      <!-- ОБЗОР -->
+      <section class="view active" id="view-dashboard">
+        <div class="stat-grid">
+          <article class="stat-card">
+            <div class="stat-icon blue">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
+            </div>
+            <div class="stat-label">Остаток на складе</div>
+            <div class="stat-value" id="stat-stock-units">—</div>
+            <div class="stat-sub" id="stat-stock-sub">—</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 6.5c0-2-2.2-3.5-5-3.5S7 4.5 7 6.5 9.2 10 12 10s5 1.5 5 3.5S14.8 17 12 17s-5-1.5-5-3.5"/></svg>
+            </div>
+            <div class="stat-label">Стоимость запасов</div>
+            <div class="stat-value" id="stat-stock-value">—</div>
+            <div class="stat-sub">по закупочным ценам партий</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon amber">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17.5v.5"/></svg>
+            </div>
+            <div class="stat-label">Скоро истекает</div>
+            <div class="stat-value" id="stat-soon">—</div>
+            <div class="stat-sub" id="stat-soon-sub">в течение 7 дней</div>
+          </article>
+          <article class="stat-card accent">
+            <div class="stat-icon violet">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            </div>
+            <div class="stat-label">Чистая прибыль · 30 дней</div>
+            <div class="stat-value" id="stat-profit">—</div>
+            <div class="stat-sub" id="stat-profit-sub">с учётом налогов</div>
+          </article>
+        </div>
+
+        <div class="layout-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Продажи за 30 дней</h2>
+                <p>Выручка и прибыль по товарам</p>
+              </div>
+              <button class="link-btn" data-go="reports">Подробный отчёт</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Товар</th><th class="num">Кол-во</th><th class="num">Выручка</th><th class="num">Прибыль</th></tr>
+                </thead>
+                <tbody id="dash-profit-body"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Сроки годности</h2>
+                <p>Ближайшие 7 дней</p>
+              </div>
+              <span class="pill amber" id="dash-soon-count">0 позиций</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Товар</th><th class="num">Остаток</th><th class="num">Срок</th></tr>
+                </thead>
+                <tbody id="dash-soon-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Последние операции</h2>
+              <p>Поступления, продажи и списания</p>
+            </div>
+            <button class="link-btn" data-go="writeoffs">Все списания</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Документ</th><th>Дата</th><th>Причина</th><th>Позиции</th><th class="num">Себестоимость</th><th class="num">Выручка</th></tr>
+              </thead>
+              <tbody id="dash-ops-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ОСТАТКИ -->
+      <section class="view" id="view-stock">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Товар на складе</h2>
+              <p>Сводные остатки по партиям и закупочной стоимости</p>
+            </div>
+            <div class="head-tools">
+              <input class="input search" id="stock-search" type="search" placeholder="Поиск по названию или артикулу" />
+              <button class="btn btn-secondary" id="stock-refresh">Обновить</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Артикул</th><th>Товар</th><th>Категория</th>
+                  <th class="num">Остаток</th><th class="num">Стоимость</th>
+                  <th>Ближайший срок</th><th class="num">Партий</th>
+                </tr>
+              </thead>
+              <tbody id="stock-body"></tbody>
+            </table>
+          </div>
+          <div class="panel-foot">
+            <span id="stock-total-units">—</span>
+            <strong id="stock-total-value">—</strong>
+          </div>
+        </article>
+      </section>
+
+      <!-- ПОСТУПЛЕНИЯ -->
+      <section class="view" id="view-receipts">
+        <div class="layout-form">
+          <article class="panel form-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Новое поступление</h2>
+                <p>Приёмка одной партии от поставщика</p>
+              </div>
+            </div>
+            <form id="receipt-form" class="form">
+              <label class="field">
+                <span>Поставщик</span>
+                <select id="receipt-supplier" required></select>
+              </label>
+              <div class="field-row">
+                <label class="field">
+                  <span>Дата поступления</span>
+                  <input id="receipt-date" type="date" required />
+                </label>
+                <label class="field">
+                  <span>Накладная</span>
+                  <input id="receipt-invoice" type="text" placeholder="НП-0000" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Товар</span>
+                <select id="receipt-product" required></select>
+              </label>
+              <div class="field-row">
+                <label class="field">
+                  <span>Количество</span>
+                  <input id="receipt-qty" type="number" min="0.001" step="0.001" value="24" required />
+                </label>
+                <label class="field">
+                  <span>Закупочная цена, ₽</span>
+                  <input id="receipt-cost" type="number" min="0" step="0.01" value="63.00" required />
+                </label>
+              </div>
+              <label class="field">
+                <span>Срок годности</span>
+                <input id="receipt-expiry" type="date" required />
+              </label>
+              <button class="btn btn-primary" type="submit">Оформить поступление</button>
+              <p class="form-hint">Каждое поступление создаёт отдельную партию со своей закупочной ценой.</p>
+            </form>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>История поступлений</h2>
+                <p>Последние документы приёмки</p>
+              </div>
+              <span class="pill" id="receipt-count">0</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Документ</th><th>Дата</th><th>Поставщик</th><th>Позиции</th><th class="num">Сумма</th></tr>
+                </thead>
+                <tbody id="receipt-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- СПИСАНИЕ -->
+      <section class="view" id="view-writeoffs">
+        <div class="layout-form">
+          <article class="panel form-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Новое списание</h2>
+                <p>Продажа, порча или истечение срока</p>
+              </div>
+            </div>
+            <form id="writeoff-form" class="form">
+              <div class="field-row">
+                <label class="field">
+                  <span>Дата операции</span>
+                  <input id="wo-date" type="date" required />
+                </label>
+                <label class="field">
+                  <span>Причина</span>
+                  <select id="wo-reason">
+                    <option value="Sale">Продажа</option>
+                    <option value="Expiry">Истёк срок годности</option>
+                    <option value="Damage">Порча / бой</option>
+                  </select>
+                </label>
+              </div>
+              <label class="field">
+                <span>Товар</span>
+                <select id="wo-product" required></select>
+              </label>
+              <div class="field-row">
+                <label class="field">
+                  <span>Количество</span>
+                  <input id="wo-qty" type="number" min="0.001" step="0.001" value="5" required />
+                </label>
+                <label class="field" id="wo-price-field">
+                  <span>Цена реализации, ₽</span>
+                  <input id="wo-price" type="number" min="0" step="0.01" value="99.00" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Комментарий</span>
+                <input id="wo-comment" type="text" placeholder="Например: розничная продажа" />
+              </label>
+              <button class="btn btn-primary" id="wo-submit" type="submit">Списать товар</button>
+              <p class="form-hint" id="wo-hint">При продаже списание идёт по FEFO: первыми уходят партии с ближайшим сроком годности.</p>
+            </form>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Журнал списаний</h2>
+                <p>Последние операции по складу</p>
+              </div>
+              <span class="pill" id="wo-count">0</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Документ</th><th>Дата</th><th>Причина</th><th>Товары</th><th class="num">Себестоимость</th><th class="num">Выручка</th></tr>
+                </thead>
+                <tbody id="wo-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ОТЧЁТЫ -->
+      <section class="view" id="view-reports">
+        <article class="panel filter-panel">
+          <div class="filter-grid">
+            <label class="field">
+              <span>Период с</span>
+              <input id="report-from" type="date" />
+            </label>
+            <label class="field">
+              <span>Период по</span>
+              <input id="report-to" type="date" />
+            </label>
+            <label class="field">
+              <span>Ставка налога, %</span>
+              <input id="report-tax" type="number" min="0" max="100" step="0.1" value="6" />
+            </label>
+            <button class="btn btn-primary" id="report-run" type="button">Сформировать отчёт</button>
+          </div>
+        </article>
+
+        <div class="stat-grid report-stats">
+          <article class="mini-stat"><span>Выручка</span><strong id="rep-revenue">—</strong></article>
+          <article class="mini-stat"><span>Себестоимость</span><strong id="rep-cost">—</strong></article>
+          <article class="mini-stat"><span>Валовая прибыль</span><strong id="rep-gross">—</strong></article>
+          <article class="mini-stat"><span>Налог</span><strong id="rep-tax">—</strong></article>
+          <article class="mini-stat highlight"><span>Чистая прибыль</span><strong id="rep-net">—</strong></article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Прибыль по товарам</h2>
+              <p id="rep-period-label">за период</p>
+            </div>
+            <span class="pill" id="rep-qty">0 ед.</span>
+          </div>
+          <div class="table-wrap">
+            <table class="profit-table">
+              <thead>
+                <tr>
+                  <th>Товар</th><th class="num">Продано</th><th class="num">Выручка</th>
+                  <th class="num">Себестоимость</th><th class="num">Валовая</th>
+                  <th class="num">Налог</th><th class="num">Чистая</th><th class="share-col">Доля</th>
+                </tr>
+              </thead>
+              <tbody id="rep-profit-body"></tbody>
+              <tfoot id="rep-profit-foot"></tfoot>
+            </table>
+          </div>
+        </article>
+
+        <div class="layout-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Списано по сроку годности</h2>
+                <p>Сумма потерь по себестоимости</p>
+              </div>
+              <span class="pill red" id="expired-total">—</span>
+            </div>
+            <div class="table-wrap table-tall">
+              <table>
+                <thead>
+                  <tr><th>Дата</th><th>Товар</th><th class="num">Кол-во</th><th>Срок</th><th class="num">Потери</th></tr>
+                </thead>
+                <tbody id="expired-body"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Скоро испортится</h2>
+                <p>Остатки с истекающим сроком</p>
+              </div>
+              <div class="head-tools">
+                <input class="input days-input" id="soon-days" type="number" min="0" max="365" value="7" />
+                <button class="btn btn-secondary btn-sm" id="soon-refresh" type="button">дней</button>
+              </div>
+            </div>
+            <div class="table-wrap table-tall">
+              <table>
+                <thead>
+                  <tr><th>Товар</th><th class="num">Остаток</th><th>Срок</th><th class="num">Дней</th><th class="num">Стоимость</th></tr>
+                </thead>
+                <tbody id="soon-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
